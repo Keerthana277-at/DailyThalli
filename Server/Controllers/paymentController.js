@@ -62,6 +62,28 @@ const createPayment = async (req,res) => {
     }
 };
 
+
+const getPayments = async (req, res) => {
+    try {
+        const payments = await Payment.find()
+            .populate("order")
+            .populate("customer");
+
+        return res.status(200).json({
+            message: "Payments fetched successfully",
+            payments
+        });
+
+    } catch (error) {
+        console.log("Get payments error:", error.message);
+
+        return res.status(500).json({
+            message: "Server error"
+        });
+    }
+};
+
 module.exports = {
-    createPayment
+    createPayment,
+    getPayments
 }
