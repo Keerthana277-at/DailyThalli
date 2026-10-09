@@ -27,6 +27,9 @@ const createPayment = async (req,res) => {
 
                 const savedPayment = await payment.save();
 
+                await savedPayment.populate("order");
+                await savedPayment.populate("customer");
+
                 existingOrder.paidAmount += amount;
                 existingOrder.dueAmount -= amount;
 

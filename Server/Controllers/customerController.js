@@ -75,7 +75,7 @@ const updateCustomer = async (req,res) => {
             req.params.id,
             req.body,{
                 new:true,
-                runvalidators:true
+                runValidators:true
             }
         );
 
