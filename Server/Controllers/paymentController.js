@@ -13,10 +13,26 @@ const createPayment = async (req,res) => {
                 message:"Order not found"
             });
 
-            if(!amount || amount <= 0)
+           
+            if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
                 return res.status(400).json({
-                    message:"Payment can't be greater than due amount"
+                    message: "Payment amount must be greater than zero"
                 });
+            }
+
+            console.log("Payment validation:", {
+            amountReceived: amount,
+            amountAsNumber: Number(amount),
+            outstandingDue: existingOrder.dueAmount
+        });
+
+
+            if (Number(amount) > existingOrder.dueAmount) {
+                return res.status(400).json({
+                    message: "Payment cannot exceed the outstanding due amount"
+                });
+            }
+
 
                 const payment = new Payment({
                     order,

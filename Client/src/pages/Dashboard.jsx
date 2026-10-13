@@ -2,6 +2,17 @@ import { useEffect, useState } from "react";
 import { userAuth } from "../context/authContext";
 import { Link } from "react-router-dom";
 import { getCustomers,getOrders,getMenu,getPayments } from "../services/dashboardService";
+import "./Dashboard.css";
+
+import {
+    Users,
+    ShoppingBag,
+    UtensilsCrossed,
+    CreditCard,
+    Wallet,
+    Clock
+} from "lucide-react";
+
 
 function Dashboard() {
 
@@ -64,43 +75,138 @@ setTotalPaid(paid);
 
     }, [token]);
 
-    return (
-        <div>
+   
+return (
+    <div className="dashboard">
+        <aside className="dashboard-sidebar">
+            <h2 className="dashboard-brand">
+                Daily<span>Thalli</span>
+            </h2>
 
-            <h1>Welcome to my dashboard!!!</h1>
+            <nav className="dashboard-nav">
+                <Link to="/dashboard">Dashboard</Link>
+                <Link to="/customers">Customers</Link>
+                <Link to="/menu">Menu</Link>
+                <Link to="/orders">Orders</Link>
+                <Link to="/payments">Payments</Link>
+            </nav>
 
-            {error && <p>{error}</p>}
-
-            <h2>Total Customers: {customerCount}</h2>
-
-            <h2>Total Orders : {orderCount}</h2>
-
-            <h2>Total menu : {menuCount}</h2>
-
-            <h2>Total payments:{paymentCount}</h2>
-
-            <h2>Total paid:{totalPaid}</h2>
-
-            <h2>Total due: {totalDue}</h2>
-
-            <Link to="/customers">Customers</Link>
-            <br />
-
-            <Link to="/menu">Menu</Link>
-            <br />
-
-            <Link to="/orders">Orders</Link>
-            <br />
-
-            <Link to="/payments">Payments</Link>
-            <br />
-
-            <button onClick={logout}>
+            <button className="dashboard-logout" onClick={logout}>
                 Logout
             </button>
+        </aside>
 
-        </div>
-    );
+        <main className="dashboard-main">
+            <header className="dashboard-header">
+                <h1>Welcome to DailyThalli 👋</h1>
+                <p>Here's an overview of your business.</p>
+            </header>
+
+            {error && (
+                <div className="dashboard-error">
+                    {error}
+                </div>
+            )}
+
+            <section className="dashboard-stats">
+                
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-top">
+                            <p className="dashboard-card-label">Total Customers</p>
+                            <div className="dashboard-icon icon-green">
+                                <Users size={22} />
+                            </div>
+                        </div>
+                        <h2 className="dashboard-card-value">{customerCount}</h2>
+                        <p className="dashboard-card-hint">Registered customers</p>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-top">
+                            <p className="dashboard-card-label">Total Orders</p>
+                            <div className="dashboard-icon icon-blue">
+                                <ShoppingBag size={22} />
+                            </div>
+                        </div>
+                        <h2 className="dashboard-card-value">{orderCount}</h2>
+                        <p className="dashboard-card-hint">Orders recorded</p>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-top">
+                            <p className="dashboard-card-label">Menu Items</p>
+                            <div className="dashboard-icon icon-purple">
+                                <UtensilsCrossed size={22} />
+                            </div>
+                        </div>
+                        <h2 className="dashboard-card-value">{menuCount}</h2>
+                        <p className="dashboard-card-hint">Items in your menu</p>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-top">
+                            <p className="dashboard-card-label">Payments Recorded</p>
+                            <div className="dashboard-icon icon-orange">
+                                <CreditCard size={22} />
+                            </div>
+                        </div>
+                        <h2 className="dashboard-card-value">{paymentCount}</h2>
+                        <p className="dashboard-card-hint">Payment transactions</p>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-top">
+                            <p className="dashboard-card-label">Revenue Collected</p>
+                            <div className="dashboard-icon icon-green">
+                                <Wallet size={22} />
+                            </div>
+                        </div>
+                        <h2 className="dashboard-card-value">
+                            ₹{totalPaid.toLocaleString("en-IN")}
+                        </h2>
+                        <p className="dashboard-card-hint">Amount paid toward orders</p>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-top">
+                            <p className="dashboard-card-label">Outstanding Dues</p>
+                            <div className="dashboard-icon icon-orange">
+                                <Clock size={22} />
+                            </div>
+                        </div>
+                        <h2 className="dashboard-card-value">
+                            ₹{totalDue.toLocaleString("en-IN")}
+                        </h2>
+                        <p className="dashboard-card-hint">Amount yet to be collected</p>
+                    </div>
+
+            </section>
+            
+                 <section className="recent-orders">
+                    <div className="recent-orders-header">
+                        <div>
+                            <h2>Recent Orders</h2>
+                            <p>Keep track of your latest orders.</p>
+                        </div>
+
+                        <Link to="/orders" className="view-all-link">
+                            View all orders →
+                        </Link>
+                    </div>
+
+                    {orderCount === 0 ? (
+                        <p className="no-orders">No orders available yet.</p>
+                    ) : (
+                        <div className="recent-orders-list">
+                            {/* We'll add the order rows in the next step. */}
+                        </div>
+                    )}
+                </section>
+
+        </main>
+    </div>
+);
+
 }
 
 export default Dashboard;

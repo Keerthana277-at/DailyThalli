@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const Customer = require("../models/Customer");
 const Menu = require("../models/Menu");
+const Payment = require("../models/Payment");
 
 const createOrder = async (req,res) => {
     try{
@@ -164,25 +165,60 @@ const updateOrder = async (req,res) => {
  }
 };
 
-const deleteOrder = async (req,res) => {
-    try{
-        const order = await Order.findByIdAndDelete(req.params.id);
 
-        if(!order)
+const deleteOrder = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
             return res.status(404).json({
-                message:"Order not found"
+                message: "Order not found"
             });
+        }
 
-            return res.status(200).json({
-                message:"Order deleted successfully"
+        // Check whether this order has recorded payments
+        const existingPayments = await Payment.find({
+            order: order._id
+        });
+
+        if (existingPayments.length > 0) {
+            return res.status(400).json({
+                message: "This order has payment records. Please handle its payment history before deleting it."
             });
-    }catch(error){
-        console.log("Delete order error:",error.message);
+        }
+
+        // Update the customer's account before deleting the order
+        const customer = await Customer.findById(order.customer);
+
+        if (customer) {
+            customer.dueAmount = Math.max(
+                0,
+                customer.dueAmount - order.dueAmount
+            );
+
+            customer.totalOrders = Math.max(
+                0,
+                customer.totalOrders - 1
+            );
+
+            await customer.save();
+        }
+
+        await Order.findByIdAndDelete(order._id);
+
+        return res.status(200).json({
+            message: "Order deleted successfully"
+        });
+
+    } catch (error) {
+        console.log("Delete order error:", error.message);
+
         return res.status(500).json({
-            message:"Server error"
+            message: "Server error"
         });
     }
 };
+
 
 module.exports = {
     createOrder,

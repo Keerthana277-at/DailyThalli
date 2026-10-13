@@ -1,134 +1,130 @@
 
 import { useEffect, useState } from "react";
+import { Pencil, Trash2, Users, UserPlus, X } from "lucide-react";
+import "./Customer.css";
 
 function Customers() {
-
     const [customers, setCustomers] = useState([]);
-
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [department, setDepartment] = useState("");
     const [regular, setRegular] = useState(false);
-
     const [error, setError] = useState("");
-    const[editingId,setEditingId] = useState(null);
+    const [editingId, setEditingId] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchCustomers = async () => {
+            const token = localStorage.getItem("token");
 
-        const token = localStorage.getItem("token");
+            try {
+                const response = await fetch(
+                    "http://localhost:5001/api/customers",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
 
-        fetch("http://localhost:5001/api/customers", {
-            headers: {
-                Authorization: `Bearer ${token}`
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to fetch customers");
+                }
+
+                setCustomers(data.customers || []);
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
             }
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Customers:", data);
-                setCustomers(data.customers);
-            })
-            .catch((error) => {
-                console.log("Error:", error);
-            });
+        };
 
+        fetchCustomers();
     }, []);
+
+    const resetForm = () => {
+        setName("");
+        setPhone("");
+        setDepartment("");
+        setRegular(false);
+        setEditingId(null);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-          setError("");
+        setError("");
+
         const token = localStorage.getItem("token");
+        const isEditing = Boolean(editingId);
 
-    try {
-        let response;
+        try {
+            const response = await fetch(
+                isEditing
+                    ? `http://localhost:5001/api/customers/${editingId}`
+                    : "http://localhost:5001/api/customers",
+                {
+                    method: isEditing ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        phone,
+                        department,
+                        regular
+                    })
+                }
+            );
 
-if (editingId) {
+            const data = await response.json();
 
-    response = await fetch(
-        `http://localhost:5001/api/customers/${editingId}`,
-        {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                name,
-                phone,
-                department,
-                regular
-            })
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to save customer");
+            }
+
+            if (isEditing) {
+                setCustomers((prev) =>
+                    prev.map((customer) =>
+                        customer._id === editingId
+                            ? data.customer
+                            : customer
+                    )
+                );
+            } else {
+                setCustomers((prev) => [
+                    data.customer,
+                    ...prev
+                ]);
+            }
+
+            resetForm();
+        } catch (error) {
+            setError(error.message);
         }
-    );
-
-} else {
-
-    response = await fetch(
-        "http://localhost:5001/api/customers",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                name,
-                phone,
-                department,
-                regular
-            })
-        }
-    );
-
-    const data = await response.json();
-
-if (!response.ok) {
-    throw new Error(data.message || "Failed to save customer");
-}
-
-console.log("Customer saved:", data);
-
-if (editingId) {
-
-    setCustomers((prevCustomers) =>
-        prevCustomers.map((customer) =>
-            customer._id === editingId
-                ? data.customer
-                : customer
-        )
-    );
-
-    setEditingId(null);
-    setName("");
-    setPhone("");
-    setDepartment("");
-    setRegular(false);
-
-    } else {
-
-        setCustomers((prevCustomers) => [
-            data.customer,
-            ...prevCustomers
-        ]);
-    }
-
-}
-    } catch (error) {
-        console.log("Error:", error);
-        setError(error.message);
-    }
-};
+    };
 
     const handleEdit = (customer) => {
-    setEditingId(customer._id);
+        setEditingId(customer._id);
+        setName(customer.name || "");
+        setPhone(customer.phone || "");
+        setDepartment(customer.department || "");
+        setRegular(Boolean(customer.regular));
+        setError("");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
-    setName(customer.name);
-    setPhone(customer.phone);
-    setDepartment(customer.department);
-    setRegular(customer.regular);
-};
+    const handleDelete = async (customerId) => {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this customer?"
+        );
 
-const handleDelete = async (customerId) => {
+        if (!confirmed) return;
+
         const token = localStorage.getItem("token");
+        setError("");
 
         try {
             const response = await fetch(
@@ -147,101 +143,196 @@ const handleDelete = async (customerId) => {
                 throw new Error(data.message || "Failed to delete customer");
             }
 
-            console.log("Customer deleted:", data);
-
-            setCustomers((prevCustomers) =>
-                prevCustomers.filter(
-                    (customer) => customer._id !== customerId
-                )
+            setCustomers((prev) =>
+                prev.filter((customer) => customer._id !== customerId)
             );
 
+            if (editingId === customerId) {
+                resetForm();
+            }
         } catch (error) {
-            console.log("Delete error:", error);
             setError(error.message);
         }
-};
+    };
 
     return (
-        <>
-            {error && <p>{error}</p>}
-    
-
-            <form onSubmit={handleSubmit}>
-
-                <div>
-                    <label>Name</label>
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Enter customer name"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label>Phone</label>
-                    <input
-                        type="text"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="Enter phone number"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label>Department</label>
-                    <input
-                        type="text"
-                        value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        placeholder="Enter department"
-                        required
-                    />
-                </div>
-
-            <div>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={regular}
-                        onChange={(e) => setRegular(e.target.checked)}
-                    />
-                    Regular Customer
-                </label>
-            </div>
-
-            <button type="submit">
-                {editingId ? "Update Customer" : "Add Customer"}
-            </button>
-
-        </form>
-
+        <div className="customers-page">
+            <header className="customers-header">
                 <div>
                     <h1>Customers</h1>
-
-                    {customers.map((customer) => (
-                        <div key={customer._id}>
-                            <h3>{customer.name}</h3>
-                            <p>Phone: {customer.phone}</p>
-                            <p>Department: {customer.department}</p>
-                            <p>Due Amount: {customer.dueAmount}</p>
-
-                            <button onClick={() => handleEdit(customer)}>
-                                Edit
-                            </button>
-
-                            <button onClick={() => handleDelete(customer._id)}>
-                                Delete
-                            </button>
-
-                        </div>
-                    ))}
+                    <p>Manage your customers and keep track of their details.</p>
                 </div>
-       </> 
+                <span className="customer-badge">
+                    <Users size={15} style={{ verticalAlign: "middle" }} />{" "}
+                    {customers.length} customers
+                </span>
+            </header>
+
+            {error && (
+                <div className="customer-error" role="alert">
+                    {error}
+                </div>
+            )}
+
+            <div className="customers-layout">
+                <section className="customer-panel">
+                    <h2>
+                        {editingId ? (
+                            <><Pencil size={19} /> Edit Customer</>
+                        ) : (
+                            <><UserPlus size={19} /> Add New Customer</>
+                        )}
+                    </h2>
+
+                    <form className="customer-form" onSubmit={handleSubmit}>
+                        <div className="customer-field">
+                            <label htmlFor="customer-name">Full Name</label>
+                            <input
+                                id="customer-name"
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Enter customer name"
+                                required
+                            />
+                        </div>
+
+                        <div className="customer-field">
+                            <label htmlFor="customer-phone">Phone Number</label>
+                            <input
+                                id="customer-phone"
+                                type="tel"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                placeholder="Enter phone number"
+                                required
+                            />
+                        </div>
+
+                        <div className="customer-field">
+                            <label htmlFor="customer-department">Department</label>
+                            <input
+                                id="customer-department"
+                                type="text"
+                                value={department}
+                                onChange={(e) => setDepartment(e.target.value)}
+                                placeholder="Enter department"
+                                required
+                            />
+                        </div>
+
+                        <label className="customer-regular-label">
+                            <input
+                                type="checkbox"
+                                checked={regular}
+                                onChange={(e) => setRegular(e.target.checked)}
+                            />
+                            Regular customer
+                        </label>
+
+                        <div className="customer-form-actions">
+                            <button className="customer-btn" type="submit">
+                                {editingId ? "Update Customer" : "Add Customer"}
+                            </button>
+
+                            {editingId && (
+                                <button
+                                    className="customer-btn customer-btn-secondary"
+                                    type="button"
+                                    onClick={resetForm}
+                                >
+                                    <X size={15} style={{ verticalAlign: "middle" }} /> Cancel
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </section>
+
+                <section className="customer-panel">
+                    <h2>Customer List</h2>
+
+                    {loading ? (
+                        <p className="customer-empty">Loading customers...</p>
+                    ) : customers.length === 0 ? (
+                        <p className="customer-empty">
+                            No customers yet. Add your first customer using the form.
+                        </p>
+                    ) : (
+                        <div className="customers-list">
+                            {customers.map((customer) => (
+                                <article className="customer-item" key={customer._id}>
+                                    <div className="customer-item-header">
+                                        <div>
+                                            <h3>{customer.name}</h3>
+                                            <span
+                                                className={`customer-badge ${
+                                                    customer.regular
+                                                        ? ""
+                                                        : "customer-badge-standard"
+                                                }`}
+                                            >
+                                                {customer.regular
+                                                    ? "Regular customer"
+                                                    : "Standard customer"}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="customer-details">
+                                        <div>
+                                            <p className="customer-detail-label">Phone</p>
+                                            <p className="customer-detail-value">
+                                                {customer.phone}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="customer-detail-label">Department</p>
+                                            <p className="customer-detail-value">
+                                                {customer.department}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="customer-detail-label">Outstanding Due</p>
+                                            <p className="customer-detail-value">
+                                                ₹{Number(customer.dueAmount || 0).toLocaleString("en-IN")}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="customer-detail-label">Total Orders</p>
+                                            <p className="customer-detail-value">
+                                                {customer.totalOrders || 0}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="customer-actions">
+                                        <button
+                                            className="customer-btn"
+                                            type="button"
+                                            onClick={() => handleEdit(customer)}
+                                        >
+                                            <Pencil size={15} style={{ verticalAlign: "middle" }} /> Edit
+                                        </button>
+
+                                        <button
+                                            className="customer-btn customer-delete"
+                                            type="button"
+                                            onClick={() => handleDelete(customer._id)}
+                                        >
+                                            <Trash2 size={15} style={{ verticalAlign: "middle" }} /> Delete
+                                        </button>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </div>
+        </div>
     );
 }
-           
-export default Customers;
 
+export default Customers;

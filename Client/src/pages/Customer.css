@@ -1,0 +1,249 @@
+
+/* Page layout */
+.customers-page {
+    min-height: 100vh;
+    padding: 32px;
+    background: #f4f7f6;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+}
+
+.customers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+.customers-header h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.customers-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+/* Content layout */
+.customers-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.customer-panel {
+    background: #ffffff;
+    border: 1px solid #e5eae7;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 3px 12px rgba(20, 50, 35, 0.04);
+}
+
+.customer-panel h2 {
+    margin: 0 0 20px;
+    font-size: 19px;
+}
+
+/* Form */
+.customer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.customer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.customer-field label,
+.customer-regular-label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.customer-field input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d5ded9;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #1f2937;
+}
+
+.customer-field input:focus {
+    outline: 2px solid #b6e4c7;
+    border-color: #39845e;
+}
+
+.customer-regular-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 400;
+}
+
+.customer-regular-label input {
+    width: 17px;
+    height: 17px;
+    accent-color: #16804a;
+}
+
+.customer-btn {
+    padding: 11px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #176344;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.customer-btn:hover {
+    background: #104d34;
+}
+
+.customer-btn-secondary {
+    background: #edf2ef;
+    color: #34483d;
+}
+
+.customer-btn-secondary:hover {
+    background: #dfe9e3;
+}
+
+.customer-form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Customer list */
+.customers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.customer-item {
+    padding: 18px;
+    border: 1px solid #e5eae7;
+    border-radius: 11px;
+    background: #ffffff;
+}
+
+.customer-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.customer-item h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+}
+
+.customer-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.customer-detail-label {
+    margin: 0 0 5px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.customer-detail-value {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.customer-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #e3f6e9;
+    color: #176344;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.customer-badge-standard {
+    background: #edf0f2;
+    color: #58636d;
+}
+
+.customer-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid #edf0ee;
+}
+
+.customer-actions button {
+    flex: 1;
+}
+
+.customer-delete {
+    background: #fff0f0;
+    color: #b42318;
+}
+
+.customer-delete:hover {
+    background: #ffe0e0;
+}
+
+.customer-error {
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #fff0f0;
+    color: #b42318;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.customer-empty {
+    padding: 28px 12px;
+    text-align: center;
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 850px) {
+    .customers-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 550px) {
+    .customers-page {
+        padding: 20px 14px;
+    }
+
+    .customers-header h1 {
+        font-size: 24px;
+    }
+
+    .customer-panel {
+        padding: 18px;
+    }
+
+    .customer-details {
+        grid-template-columns: 1fr;
+    }
+}
