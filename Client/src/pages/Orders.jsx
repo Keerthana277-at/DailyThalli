@@ -380,7 +380,7 @@ function Orders() {
                                             </div>
                                             <div>
                                                 <h3>
-                                                    {order.customer.name || "Customer"}
+                                                    {order.customer?.name || "Customer"}
                                                 </h3>
                                                 <span className="order-reference">
                                                     Order #{order._id.slice(-6).toUpperCase()}

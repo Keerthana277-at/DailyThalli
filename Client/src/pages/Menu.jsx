@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { UtensilsCrossed, Plus, Pencil, Trash2, X, Leaf } from "lucide-react";
 import "./Menu.css";
+import { userAuth } from "../context/authContext";
 
 function Menu() {
+    console.log("Menu component is rendering");
+    const { user } = userAuth();
+    const isAdmin = user?.role === "admin";
     const [menuItems, setMenuItems] = useState([]);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -156,22 +160,30 @@ function Menu() {
         }
     };
 
+    const visibleMenuItems = isAdmin
+        ? menuItems
+        : menuItems.filter((item) => item.available);
+
     return (
         <div className="menu-page">
             <header className="menu-page-header">
                 <div>
-                    <h1>Menu Management</h1>
-                    <p>Manage your dishes, prices, and availability.</p>
+                    <h1>{isAdmin ? "Menu Management" : "Available Food"}</h1>
+                    <p>
+                        {isAdmin
+                            ? "Manage your dishes, prices, and availability."
+                            : "Explore today's available food items."}
+                    </p>
                 </div>
 
                 <div className="menu-count">
                     <UtensilsCrossed size={16} />
-                    {" "}{menuItems.length} Menu Items
+                    {" "}{visibleMenuItems.length} {isAdmin ? "Menu Items" : "Available Items"}
                 </div>
             </header>
 
             <div className="menu-layout">
-                <section className="menu-form-panel">
+                {isAdmin &&  (<section className="menu-form-panel">
                     <div className="menu-panel-heading">
                         <div className="menu-panel-icon">
                             {editingId ? <Pencil size={21} /> : <Plus size={22} />}
@@ -286,7 +298,7 @@ function Menu() {
                         </div>
                     </form>
                 </section>
-
+                )}
                 <section className="menu-list-panel">
                     <div className="menu-list-heading">
                         <div>
@@ -302,14 +314,22 @@ function Menu() {
                     )}
 
                     <div className="menu-items-grid">
-                        {menuItems.length === 0 ? (
+                        {visibleMenuItems.length === 0 ? (
                             <div className="menu-empty-state">
                                 <UtensilsCrossed size={32} />
-                                <h3>Your menu is empty</h3>
-                                <p>Add your first menu item using the form.</p>
+
+                                <h3>
+                                    {isAdmin ? "Your menu is empty" : "No food available right now"}
+                                </h3>
+
+                                <p>
+                                    {isAdmin
+                                        ? "Add your first menu item using the form."
+                                        : "Please check back later for available food items."}
+                                </p>
                             </div>
                         ) : (
-                            menuItems.map((item) => (
+                            visibleMenuItems.map((item) => (
                                 <article className="menu-item-card" key={item._id}>
                                     <div className="menu-item-top">
                                         <div>
@@ -339,7 +359,7 @@ function Menu() {
                                             ₹{Number(item.price).toLocaleString("en-IN")}
                                         </span>
 
-                                        <div className="menu-item-actions">
+                                    { isAdmin &&    (<div className="menu-item-actions">
                                             <button
                                                 type="button"
                                                 className="menu-icon-button menu-edit-button"
@@ -359,7 +379,7 @@ function Menu() {
                                             >
                                                 <Trash2 size={16} />
                                             </button>
-                                        </div>
+                                        </div>)}
                                     </div>
                                 </article>
                             ))
@@ -368,6 +388,7 @@ function Menu() {
                 </section>
             </div>
         </div>
+        
     );
 }
 

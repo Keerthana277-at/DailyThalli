@@ -1,26 +1,45 @@
-const express = require("express");
 
+const express = require("express");
 
 const {
     createMenuItem,
     getMenuItems,
     getMenuItemsByID,
     updateMenuItem,
-    deleteItem 
+    deleteItem
 } = require("../Controllers/menuController");
 
 const authMiddleware = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-router.post("/",authMiddleware,createMenuItem);
+// Admin only: create food items
+router.post(
+    "/",
+    authMiddleware,
+    authorizeRoles("admin"),
+    createMenuItem
+);
 
-router.get("/",authMiddleware,getMenuItems);
+// Logged-in users: view menu
+router.get("/", authMiddleware, getMenuItems);
 
-router.get("/:id",authMiddleware,getMenuItemsByID);
+router.get("/:id", authMiddleware, getMenuItemsByID);
 
-router.put("/:id",authMiddleware,updateMenuItem);
+// Admin only: edit and delete food items
+router.put(
+    "/:id",
+    authMiddleware,
+    authorizeRoles("admin"),
+    updateMenuItem
+);
 
-router.delete("/:id",authMiddleware,deleteItem);
+router.delete(
+    "/:id",
+    authMiddleware,
+    authorizeRoles("admin"),
+    deleteItem
+);
 
 module.exports = router;

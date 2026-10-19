@@ -25,25 +25,37 @@ const createMenuItem = async (req,res) => {
     }
 };
 
-const getMenuItems = async (req,res) => {
-    try{
-        const menuItems = await Menu.find().sort({ createdAt:-1 });
+
+const getMenuItems = async (req, res) => {
+    try {
+        // Admins see all items; customers see available items only.
+        const filter =
+            req.user.role === "admin"
+                ? {}
+                : { available: true };
+
+        const menuItems = await Menu.find(filter)
+            .sort({ createdAt: -1 });
 
         return res.status(200).json({
-            message:"menu items fetched successfully",
+            message: "Menu items fetched successfully",
             menuItems
         });
-    }catch(error){
-        console.log("Get menu error:",error.message);
+    } catch (error) {
+        console.log("Get menu error:", error.message);
+
         return res.status(500).json({
-            message:"Server error"
+            message: "Server error"
         });
     }
 };
 
+
 const getMenuItemsByID = async (req,res) => {
     try{
          const menuItem = await Menu.findById(req.params.id);
+
+
 
         if(!menuItem)
             return res.status(404).json({
@@ -53,6 +65,16 @@ const getMenuItemsByID = async (req,res) => {
             message:"Fetched successfully",
             menuItem
         });  
+
+
+                if (
+            req.user.role !== "admin" &&
+            !menuItem.available
+        ) {
+            return res.status(404).json({
+                message: "Menu item not found"
+            });
+        }
     }catch(error){
         console.log("Server error:",error.message);
         return res.status(500).json({

@@ -3,135 +3,173 @@ const Customer = require("../models/Customer");
 const Menu = require("../models/Menu");
 const Payment = require("../models/Payment");
 
-const createOrder = async (req,res) => {
-    try{
-        const {customer,items,paidAmount} = req.body;
+const createOrder = async (req, res) => {
+    try {
+        const { items } = req.body;
 
-        const existingCustomer = await Customer.findById(customer);
-
-        if(!existingCustomer)
-            return res.status(404).json({
-        message:"Customer not found"
-    });
-
-    if(!items || items.length == 0)
-        return res.status(400).json({
-            message:"Order must contain at least one menu item"
+        // Find the Customer record linked to the logged-in User
+        const existingCustomer = await Customer.findOne({
+            user: req.user.id
         });
 
-     const orderItems = [];
-     let totalAmount = 0;
-     
-     for(const item of items){
-        const menuItem = await Menu.findById(item.menuItem);
-
-        if(!menuItem)
+        if (!existingCustomer) {
             return res.status(404).json({
-                message:"Menu item not found"
+                message: "Customer profile not found"
+            });
+        }
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                message: "Order must contain at least one menu item"
+            });
+        }
+
+        const orderItems = [];
+        let totalAmount = 0;
+
+        for (const item of items) {
+            if (
+                !item.menuItem ||
+                !Number.isInteger(item.quantity) ||
+                item.quantity < 1
+            ) {
+                return res.status(400).json({
+                    message: "Each item must have a menu ID and a valid quantity"
+                });
+            }
+
+            const menuItem = await Menu.findById(item.menuItem);
+
+            if (!menuItem) {
+                return res.status(404).json({
+                    message: "Menu item not found"
+                });
+            }
+
+            if (!menuItem.available) {
+                return res.status(400).json({
+                    message: `${menuItem.name} is currently unavailable`
+                });
+            }
+
+            const total = menuItem.price * item.quantity;
+
+            orderItems.push({
+                menuItem: menuItem._id,
+                quantity: item.quantity,
+                price: menuItem.price,
+                total
             });
 
+            totalAmount += total;
+        }
 
-            if(!menuItem.available)
-                return res.status(400).json({
-                    message:`${menuItem.name} is currently unavailable.`
-                });
-
-                const total = menuItem.price*item.quantity;
-
-                orderItems.push({
-                    menuItem:menuItem._id,
-                    quantity:item.quantity,
-                    price:menuItem.price,
-                    total
-                });
-
-                totalAmount += total;
-     }
-
-     const dueAmount = totalAmount - paidAmount;
-
-     if(paidAmount > totalAmount)
-        return res.status(400).json({
-            message:"paid amount can't be greater than total amount"
-        });
-
-        let paymentStatus = "Pending";
-
-        if(paidAmount === totalAmount)
-            paymentStatus = "Paid"
-
-        else if(paidAmount>0)
-            paymentStatus = "Partial";
+        // Customer orders start unpaid
+        const paidAmount = 0;
+        const dueAmount = totalAmount;
 
         const order = new Order({
-            customer,
-            itmes:orderItems,
+            customer: existingCustomer._id,
+            items: orderItems,
             totalAmount,
             paidAmount,
             dueAmount,
-            paymentStatus
+            paymentStatus: "Pending",
+            orderStatus: "Pending"
         });
 
-        const saveOrder = await order.save();
+        const savedOrder = await order.save();
 
         existingCustomer.totalOrders += 1;
         existingCustomer.dueAmount += dueAmount;
-
         await existingCustomer.save();
 
         return res.status(201).json({
-            message:"Order created successfully",
-            order:saveOrder
+            message: "Order placed successfully",
+            order: savedOrder
         });
-  }catch(error){
-    console.log("Create order error:",error.message);
-
-    return res.status(500).json({
-        message:"Server error"
-    })
-  }
-};
-
-
-const getOrders = async (req,res) => {
-    try{
-        const orders = await Order.find()
-        .populate("customer","name phone department")
-        .populate("items.menuItem","name price")
-        .sort({ createdAt:-1 });
-
-        return res.status(200).json({
-            message:"Orders fetched successfully",
-            orders
-        });
-    }catch(error){
-        console.log("Get orders error:",error.message);
+    } catch (error) {
+        console.error("Create order error:", error.message);
 
         return res.status(500).json({
-            message:"Server error"
+            message: "Unable to place order"
         });
     }
 };
 
-const getOrderById = async (req,res) => {
-    try{
-        const order = await Order.findById(req.params.id)
-        .populate("customer","name phone department")
-        .populate("items.menuItem","name price");
+const getOrders = async (req, res) => {
+    try {
+        let filter = {};
 
-        if(!order)
-            return res.status(404).json({
-                message:"Orders not found"
+        if (req.user.role === "customer") {
+            const customer = await Customer.findOne({
+                user: req.user.id
             });
 
-            return res.status(200).json({
-                message:"Order fetched successfully",
-                order
+            if (!customer) {
+                return res.status(404).json({
+                    message: "Customer profile not found"
+                });
+            }
+
+            filter.customer = customer._id;
+        } else if (req.user.role !== "admin") {
+            return res.status(403).json({
+                message: "Access denied"
             });
-    }catch(error){
-        console.log("get order error:",error.message);
+        }
+
+        const orders = await Order.find(filter)
+            .populate("customer", "name phone department")
+            .populate("items.menuItem", "name price")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({ orders });
+    } catch (error) {
+        console.error("Get orders error:", error.message);
+
         return res.status(500).json({
-            message:"Server error"
+            message: "Unable to fetch orders"
+        });
+    }
+};
+const getOrderById = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate("customer", "name phone department")
+            .populate("items.menuItem", "name price");
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Order not found"
+            });
+        }
+
+        if (req.user.role === "customer") {
+            const customer = await Customer.findOne({
+                user: req.user.id
+            });
+
+            if (
+                !customer ||
+                order.customer._id.toString() !== customer._id.toString()
+            ) {
+                return res.status(403).json({
+                    message: "You cannot access this order"
+                });
+            }
+        } else if (req.user.role !== "admin") {
+            return res.status(403).json({
+                message: "Access denied"
+            });
+        }
+
+        return res.status(200).json({ order });
+    } catch (error) {
+        console.error("Get order error:", error.message);
+
+        return res.status(500).json({
+            message: "Unable to fetch order"
         });
     }
 };

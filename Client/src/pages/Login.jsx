@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 import {
     Eye,
     EyeOff,
@@ -185,6 +185,19 @@ function Login() {
                             )}
                         </button>
                     </form>
+
+                    <p style={{ textAlign: "center", marginTop: "20px" }}>
+                        Don't have an account?{" "}
+                        <Link
+                            to="/register"
+                            style={{
+                                color: "#287747",
+                                fontWeight: 600
+                            }}
+                        >
+                            Create an account
+                        </Link>
+                    </p>
 
                     <div className="login-footer">
                         <LockKeyhole
