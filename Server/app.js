@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-app.use(cors({ origin: "https://foodproject-dun.vercel.app" }));
+app.use(cors({
+  origin: ["https://foodproject-dun.vercel.app", "http://localhost:5173"]
+}));
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const app = express();
