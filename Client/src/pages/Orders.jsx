@@ -7,7 +7,7 @@ import {
     ClipboardList
 } from "lucide-react";
 import "./Orders.css";
-
+const API = import.meta.env.VITE_API_URL;
 function Orders() {
     const [orders, setOrders] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -35,9 +35,9 @@ function Orders() {
 
                 const [ordersResponse, customersResponse, menuResponse] =
                     await Promise.all([
-                        fetch("http://localhost:5001/api/orders", { headers }),
-                        fetch("http://localhost:5001/api/customers", { headers }),
-                        fetch("http://localhost:5001/api/menu", { headers })
+                        fetch(`${API}/api/orders`, { headers }),
+                        fetch(`${API}/api/customers`, { headers }),
+                        fetch(`${API}/api/menu`, { headers })
                     ]);
 
                 const [ordersData, customersData, menuData] = await Promise.all([
@@ -110,7 +110,7 @@ function Orders() {
         setLoading(true);
 
         try {
-            const response = await fetch("http://localhost:5001/api/orders", {
+            const response = await fetch(`${API}/api/orders`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -158,7 +158,7 @@ function Orders() {
 
         try {
             const response = await fetch(
-                `http://localhost:5001/api/orders/${orderId}`,
+                `${API}/api/orders/${orderId}`,
                 {
                     method: "PUT",
                     headers: {
@@ -204,7 +204,7 @@ function Orders() {
 
         try {
             const response = await fetch(
-                `http://localhost:5001/api/orders/${orderId}`,
+                `${API}/api/orders/${orderId}`,
                 {
                     method: "DELETE",
                     headers: {

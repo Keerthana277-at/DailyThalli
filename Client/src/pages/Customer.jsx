@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Users, UserPlus, X } from "lucide-react";
 import "./Customer.css";
-
+const API = import.meta.env.VITE_API_URL;
 function Customers() {
     const [customers, setCustomers] = useState([]);
     const [name, setName] = useState("");
@@ -19,7 +19,7 @@ function Customers() {
 
             try {
                 const response = await fetch(
-                    "http://localhost:5001/api/customers",
+                    `${API}/api/customers`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -62,8 +62,8 @@ function Customers() {
         try {
             const response = await fetch(
                 isEditing
-                    ? `http://localhost:5001/api/customers/${editingId}`
-                    : "http://localhost:5001/api/customers",
+                    ? `${API}/api/customers/${editingId}`
+                    : `${API}/api/customers`,
                 {
                     method: isEditing ? "PUT" : "POST",
                     headers: {
@@ -128,7 +128,7 @@ function Customers() {
 
         try {
             const response = await fetch(
-                `http://localhost:5001/api/customers/${customerId}`,
+                `${API}/api/customers/${customerId}`,
                 {
                     method: "DELETE",
                     headers: {

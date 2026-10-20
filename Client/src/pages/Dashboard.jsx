@@ -3,7 +3,7 @@ import { userAuth } from "../context/authContext";
 import { Link } from "react-router-dom";
 import { getCustomers,getOrders,getMenu,getPayments } from "../services/dashboardService";
 import "./Dashboard.css";
-
+const API = import.meta.env.VITE_API_URL;
 import {
     Users,
     ShoppingBag,

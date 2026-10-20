@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+const API = import.meta.env.VITE_API_URL;
 import {
     CreditCard,
     Wallet,
@@ -9,7 +10,8 @@ import {
     Plus,
     IndianRupee,
     History,
-    CheckCircle2
+    CheckCircle2,
+    AppleIcon
 } from "lucide-react";
 import "./Payments.css";
 
@@ -33,12 +35,12 @@ function Payments() {
         try {
             const [ordersResponse, paymentsResponse] =
                 await Promise.all([
-                    fetch("http://localhost:5001/api/orders", {
+                    fetch(`${Api}/api/orders`, {
                         headers: {
                             Authorization: `Bearer ${token}`
                         }
                     }),
-                    fetch("http://localhost:5001/api/payments", {
+                    fetch(`${API}/api/payments`, {
                         headers: {
                             Authorization: `Bearer ${token}`
                         }
@@ -107,7 +109,7 @@ function Payments() {
 
         try {
             const response = await fetch(
-                "http://localhost:5001/api/payments",
+                `${API}/api/payments`,
                 {
                     method: "POST",
                     headers: {
@@ -142,7 +144,7 @@ function Payments() {
 
             // Refresh outstanding balances after a successful payment.
             const ordersResponse = await fetch(
-                "http://localhost:5001/api/orders",
+                `${API}/api/orders`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { UtensilsCrossed, Plus, Pencil, Trash2, X, Leaf } from "lucide-react";
 import "./Menu.css";
 import { userAuth } from "../context/authContext";
-
+const API = import.meta.env.VITE_API_URL;
 function Menu() {
     console.log("Menu component is rendering");
     const { user } = userAuth();
@@ -21,7 +21,7 @@ function Menu() {
         const token = localStorage.getItem("token");
 
         try {
-            const response = await fetch("http://localhost:5001/api/menu", {
+            const response = await fetch(`${API}/api/menu`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -64,8 +64,8 @@ function Menu() {
         try {
             const response = await fetch(
                 isEditing
-                    ? `http://localhost:5001/api/menu/${editingId}`
-                    : "http://localhost:5001/api/menu",
+                    ? `${API}/api/menu/${editingId}`
+                    : `${API}/api/menu`,
                 {
                     method: isEditing ? "PUT" : "POST",
                     headers: {
@@ -133,7 +133,7 @@ function Menu() {
 
         try {
             const response = await fetch(
-                `http://localhost:5001/api/menu/${menuId}`,
+                `${API}/api/menu/${menuId}`,
                 {
                     method: "DELETE",
                     headers: {
