@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+const app = express();
 app.use(cors());
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
-const app = express();
+
 
 const cutomerRoutes = require("./routes/customerRoutes");
 const menuRoutes = require("./routes/menuRoutes");
@@ -11,7 +12,7 @@ const menuRoutes = require("./routes/menuRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 app.use(express.json());
-app.use(cors());
+
 app.use("/api/customers",cutomerRoutes);
 app.use("/api/auth",authRoutes);
 const publicRoutes = require("./routes/publicRoutes");
