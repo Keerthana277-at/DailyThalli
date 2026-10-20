@@ -1,11 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-app.use(cors({
-  origin: [
-    "https://daily-thalli.vercel.app",
-    "http://localhost:5173"
-  ]
-}));
+app.use(cors());
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const app = express();
