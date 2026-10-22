@@ -35,7 +35,7 @@ function Payments() {
         try {
             const [ordersResponse, paymentsResponse] =
                 await Promise.all([
-                    fetch(`${Api}/api/orders`, {
+                    fetch(`${API}/api/orders`, {
                         headers: {
                             Authorization: `Bearer ${token}`
                         }

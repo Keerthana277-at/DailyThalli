@@ -19,7 +19,7 @@ const router = express.Router();
 router.post(
     "/",
     authMiddleware,
-    authorizeRoles("customer"),
+    authorizeRoles("admin"),
     createOrder
 );
 

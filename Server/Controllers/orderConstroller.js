@@ -5,16 +5,14 @@ const Payment = require("../models/Payment");
 
 const createOrder = async (req, res) => {
     try {
-        const { items } = req.body;
+        const { customer, items,paidAmount } = req.body;
 
-        // Find the Customer record linked to the logged-in User
-        const existingCustomer = await Customer.findOne({
-            user: req.user.id
-        });
+        // Find the customer selected by the admin
+        const existingCustomer = await Customer.findById(customer);
 
         if (!existingCustomer) {
             return res.status(404).json({
-                message: "Customer profile not found"
+                message: "Customer not found"
             });
         }
 
@@ -65,20 +63,43 @@ const createOrder = async (req, res) => {
         }
 
         // Customer orders start unpaid
-        const paidAmount = 0;
-        const dueAmount = totalAmount;
+       const paid = Number(paidAmount || 0);
+
+        if (!Number.isFinite(paid) || paid < 0) {
+            return res.status(400).json({
+                message: "Paid amount must be a valid non-negative number"
+            });
+        }
+
+        if (paid > totalAmount) {
+            return res.status(400).json({
+                message: "Paid amount cannot exceed the total amount"
+            });
+        }
+
+        const dueAmount = totalAmount - paid;
+
+        const paymentStatus =
+            paid === 0
+                ? "Pending"
+                : dueAmount === 0
+                    ? "Paid"
+                    : "Partial";
 
         const order = new Order({
             customer: existingCustomer._id,
             items: orderItems,
             totalAmount,
-            paidAmount,
+            paidAmount: paid,
             dueAmount,
-            paymentStatus: "Pending",
+            paymentStatus,
             orderStatus: "Pending"
         });
 
         const savedOrder = await order.save();
+
+        await savedOrder.populate("customer", "name phone department");
+        await savedOrder.populate("items.menuItem", "name price");
 
         existingCustomer.totalOrders += 1;
         existingCustomer.dueAmount += dueAmount;
@@ -218,6 +239,9 @@ const deleteOrder = async (req, res) => {
         const existingPayments = await Payment.find({
             order: order._id
         });
+
+        console.log("Order ID being deleted:", order._id);
+        console.log("Existing payments:", existingPayments);
 
         if (existingPayments.length > 0) {
             return res.status(400).json({

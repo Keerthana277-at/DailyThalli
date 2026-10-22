@@ -45,21 +45,21 @@ function Dashboard() {
         const menuData = await getMenu(token);
         setmenuCount(menuData.menuItems.length);
 
+        
         const due = orderData.orders.reduce(
-    (total, order) => total + order.dueAmount,
-    0
-);
+            (total, order) => total + Number(order.dueAmount || 0),
+            0
+        );
 
-setTotalDue(due);
-
-
+        setTotalDue(due);
 
         const paid = orderData.orders.reduce(
-    (total, order) => total + order.paidAmount,
-    0
-);
+            (total, order) => total + Number(order.paidAmount || 0),
+            0
+        );
 
-setTotalPaid(paid);
+        setTotalPaid(paid);
+
 
         const paymentData = await getPayments(token);
         setpaymentCount(paymentData.payments.length);

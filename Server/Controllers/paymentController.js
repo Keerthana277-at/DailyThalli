@@ -27,7 +27,7 @@ const createPayment = async (req,res) => {
         });
 
 
-            if (Number(amount) > existingOrder.dueAmount) {
+           if (Number(amount) > Number(existingOrder.dueAmount)) {
                 return res.status(400).json({
                     message: "Payment cannot exceed the outstanding due amount"
                 });
@@ -37,7 +37,7 @@ const createPayment = async (req,res) => {
                 const payment = new Payment({
                     order,
                     customer:existingOrder.customer,
-                    amount,
+                    amount:Number(amount),
                     paymentMethod
                 });
 
@@ -46,23 +46,29 @@ const createPayment = async (req,res) => {
                 await savedPayment.populate("order");
                 await savedPayment.populate("customer");
 
-                existingOrder.paidAmount += amount;
-                existingOrder.dueAmount -= amount;
 
-                if(existingOrder.dueAmount === 0)
+                const paymentAmount = Number(amount);
+
+                existingOrder.paidAmount =
+                    Number(existingOrder.paidAmount || 0) + paymentAmount;
+
+                existingOrder.dueAmount =
+                    Math.max(0, Number(existingOrder.totalAmount) - existingOrder.paidAmount);
+
+                if (existingOrder.dueAmount === 0) {
                     existingOrder.paymentStatus = "Paid";
-                else
+                } else {
                     existingOrder.paymentStatus = "Partial";
+                }
+
 
                 await existingOrder.save();
 
                 const customer = await Customer.findById(existingOrder.customer);
 
                 if(customer){
-                    customer.dueAmount -= amount;
+                   customer.dueAmount = Math.max(0, Number(customer.dueAmount || 0) - paymentAmount);
 
-                    if(customer.dueAmount<0)
-                        customer.dueAmount = 0;
 
                     await customer.save();
                 }
@@ -102,7 +108,83 @@ const getPayments = async (req, res) => {
     }
 };
 
+
+const deletePayment = async (req, res) => {
+    try {
+        const payment = await Payment.findById(req.params.id);
+
+        if (!payment) {
+            return res.status(404).json({
+                message: "Payment not found"
+            });
+        }
+
+        const order = await Order.findById(payment.order);
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Associated order not found. Payment was not deleted."
+            });
+        }
+
+        const customer = await Customer.findById(payment.customer);
+
+        const paymentAmount = Number(payment.amount);
+        const currentPaid = Number(order.paidAmount || 0);
+        const totalAmount = Number(order.totalAmount || 0);
+
+        if (paymentAmount > currentPaid) {
+            return res.status(400).json({
+                message: "Payment amount exceeds the order's recorded paid amount."
+            });
+        }
+
+        // Reverse the payment's effect on the order.
+        order.paidAmount = Math.max(0, currentPaid - paymentAmount);
+        order.dueAmount = Math.max(0, totalAmount - order.paidAmount);
+
+        if (order.dueAmount === 0) {
+            order.paymentStatus = "Paid";
+        } else if (order.paidAmount === 0) {
+            order.paymentStatus = "Pending";
+        } else {
+            order.paymentStatus = "Partial";
+        }
+
+        await order.save();
+
+        // Recalculate the customer's outstanding dues.
+        if (customer) {
+            const customerOrders = await Order.find({
+                customer: customer._id
+            });
+
+            customer.dueAmount = customerOrders.reduce(
+                (total, item) => total + Math.max(0, Number(item.dueAmount || 0)),
+                0
+            );
+
+            await customer.save();
+        }
+
+        await payment.deleteOne();
+
+        return res.status(200).json({
+            message: "Payment deleted and balances updated successfully."
+        });
+
+    } catch (error) {
+        console.error("Delete payment error:", error.message);
+
+        return res.status(500).json({
+            message: "Unable to delete payment."
+        });
+    }
+};
+
+
 module.exports = {
     createPayment,
-    getPayments
+    getPayments,
+    deletePayment
 }
