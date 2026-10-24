@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-app.use(cors());
+   app.use(cors({
+     origin: ["https://daily-thalli.vercel.app", "http://localhost:5173"],
+     credentials: true
+   }));
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 
