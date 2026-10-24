@@ -5,22 +5,20 @@ const app = express();
      origin: ["https://daily-thalli.vercel.app", "http://localhost:5173"],
      credentials: true
    }));
-app.use(express.json());  
-app.use("/api/auth",authRoutes); 
-const authRoutes = require("./routes/authRoutes");
+app.use(express.json()); 
+
+
+const authRoutes = require("./routes/authRoutes"); 
 const authMiddleware = require("./middleware/authMiddleware");
-
-
 const cutomerRoutes = require("./routes/customerRoutes");
 const menuRoutes = require("./routes/menuRoutes");
-
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-
-
-app.use("/api/customers",cutomerRoutes);
-
 const publicRoutes = require("./routes/publicRoutes");
+
+
+app.use("/api/auth",authRoutes); 
+app.use("/api/customers",cutomerRoutes);
 app.get("/api/test",authMiddleware,(req,res)=>{
     res.json({
         message:"Success",
