@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { UtensilsCrossed, Plus, Pencil, Trash2, X, Leaf } from "lucide-react";
+import {
+    UtensilsCrossed,
+    Plus,
+    Pencil,
+    Trash2,
+    X,
+    ShoppingCart,
+    Minus
+} from "lucide-react";
 import "./Menu.css";
 import { userAuth } from "../context/authContext";
 const API = import.meta.env.VITE_API_URL;
@@ -16,6 +24,9 @@ function Menu() {
     const [editingId, setEditingId] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [cart, setCart] = useState([]);
+    const [orderLoading, setOrderLoading] = useState(false);
+    const [orderSuccess, setOrderSuccess] = useState("");
 
     const fetchMenuItems = async () => {
         const token = localStorage.getItem("token");
@@ -163,6 +174,110 @@ function Menu() {
     const visibleMenuItems = isAdmin
         ? menuItems
         : menuItems.filter((item) => item.available);
+
+
+    
+        // Add an item to the cart
+        const addToCart = (item) => {
+            setCart((previousCart) => {
+                const existingItem = previousCart.find(
+                    (cartItem) => cartItem.menuItem === item._id
+                );
+
+                if (existingItem) {
+                    return previousCart.map((cartItem) =>
+                        cartItem.menuItem === item._id
+                            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                            : cartItem
+                    );
+                }
+
+                return [
+                    ...previousCart,
+                    {
+                        menuItem: item._id,
+                        name: item.name,
+                        price: Number(item.price),
+                        quantity: 1
+                    }
+                ];
+            });
+
+            setOrderSuccess("");
+            setError("");
+        };
+
+        // Increase or decrease quantity
+        const updateQuantity = (menuItem, change) => {
+            setCart((previousCart) =>
+                previousCart
+                    .map((item) =>
+                        item.menuItem === menuItem
+                            ? { ...item, quantity: item.quantity + change }
+                            : item
+                    )
+                    .filter((item) => item.quantity > 0)
+            );
+        };
+
+        // Remove an item from the cart
+        const removeFromCart = (menuItem) => {
+            setCart((previousCart) =>
+                previousCart.filter((item) => item.menuItem !== menuItem)
+            );
+        };
+
+        // Calculate total cart amount
+        const cartTotal = cart.reduce(
+            (total, item) => total + item.price * item.quantity,
+            0
+        );
+
+        // Place one combined order
+        const handlePlaceOrder = async () => {
+            if (cart.length === 0) {
+                setError("Please add food items to your cart.");
+                return;
+            }
+
+            setOrderLoading(true);
+            setError("");
+            setOrderSuccess("");
+
+            try {
+                const token = localStorage.getItem("token");
+
+                const response = await fetch(`${API}/api/orders`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        items: cart.map((item) => ({
+                            menuItem: item.menuItem,
+                            quantity: item.quantity
+                        })),
+                        paidAmount: 0
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Unable to place order");
+                }
+
+                setCart([]);
+                setOrderSuccess("Your order has been placed successfully!");
+            } catch (error) {
+                setError(error.message || "Something went wrong.");
+            } finally {
+                setOrderLoading(false);
+            }
+        };
+
+
 
     return (
         <div className="menu-page">
@@ -358,6 +473,17 @@ function Menu() {
                                         <span className="menu-item-price">
                                             ₹{Number(item.price).toLocaleString("en-IN")}
                                         </span>
+
+                                         {!isAdmin && (
+                                                <button
+                                                    type="button"
+                                                    className="add-to-cart-btn"
+                                                    onClick={() => addToCart(item)}
+                                                >
+                                                    <ShoppingCart size={18} />
+                                                    Add to Cart
+                                                </button>
+                                        )}
 
                                     { isAdmin &&    (<div className="menu-item-actions">
                                             <button

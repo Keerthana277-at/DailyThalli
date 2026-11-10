@@ -68,7 +68,7 @@ const getMenuItemsByID = async (req,res) => {
 
 
                 if (
-            req.user.role !== "admin" &&
+            req.user.role === "admin" &&
             !menuItem.available
         ) {
             return res.status(404).json({

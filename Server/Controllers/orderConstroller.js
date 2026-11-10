@@ -5,14 +5,32 @@ const Payment = require("../models/Payment");
 
 const createOrder = async (req, res) => {
     try {
-        const { customer, items,paidAmount } = req.body;
+        const { customer, items, paidAmount } = req.body;
 
-        // Find the customer selected by the admin
-        const existingCustomer = await Customer.findById(customer);
+        let existingCustomer;
+
+        // Admin can select a customer
+        if (req.user.role === "admin") {
+            existingCustomer = await Customer.findById(customer);
+        }
+
+        // Customer can place an order only for their own profile
+        else if (req.user.role === "customer") {
+            existingCustomer = await Customer.findOne({
+                user: req.user.id
+            });
+        }
+
+        // Reject other roles
+        else {
+            return res.status(403).json({
+                message: "Access denied"
+            });
+        }
 
         if (!existingCustomer) {
             return res.status(404).json({
-                message: "Customer not found"
+                message: "Customer profile not found"
             });
         }
 
