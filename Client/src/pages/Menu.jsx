@@ -297,7 +297,7 @@ function Menu() {
                 </div>
             </header>
 
-            <div className="menu-layout">
+            <div className={`menu-layout ${!isAdmin ? "customer-menu-layout" : ""}`}>
                 {isAdmin &&  (<section className="menu-form-panel">
                     <div className="menu-panel-heading">
                         <div className="menu-panel-icon">
